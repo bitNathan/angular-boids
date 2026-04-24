@@ -1,0 +1,9 @@
+.header-div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.toggle_button {
+  width: 10%;
+  height: 50px;
+}
