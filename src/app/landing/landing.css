@@ -1,0 +1,10 @@
+.quote {
+  background-color: lightgrey;
+  border-radius: 15px;
+}
+
+.column-box{
+  display: flex;
+  justify-content: space-between;
+  gap: 10%
+}

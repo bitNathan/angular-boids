@@ -1,6 +1,5 @@
-p {
-  font-size: 0.75em;
-  font-style: italic;
+p, a {
+  font-size: 1em;
 }
 
 .footer-div {
