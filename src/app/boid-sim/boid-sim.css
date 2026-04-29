@@ -1,0 +1,8 @@
+canvas#pixiCanvas {
+  display: block;
+}
+
+div.pixi-canv-wrap {
+  width: 100vw;
+  height: 80vh;
+}
