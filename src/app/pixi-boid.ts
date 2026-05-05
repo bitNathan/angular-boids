@@ -14,7 +14,11 @@ export class PixiBoid {
   // TODO handle args for bg color
   async getApp(canvas: HTMLCanvasElement){
     // return app if present
-    if (this.app) return this.app;
+    if (this.app){
+      this.app.renderer.resize(canvas.width, canvas.height);
+      (this.app.renderer as any).view = canvas;
+      return this.app;
+    }
 
     // create and init app outside angular
     await this.ngZone.runOutsideAngular(async () => {
@@ -38,5 +42,11 @@ export class PixiBoid {
   removeTicker(fn: (dt: any) => void) {
     this.app?.ticker.remove(fn);
   }
-  // TODO destroy
+
+  destroyApp(){
+    if (this.app){
+      this.app.destroy(true);
+      this.app = null;
+    }
+  }
 }

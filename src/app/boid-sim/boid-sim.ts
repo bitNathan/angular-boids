@@ -1,4 +1,4 @@
-import { Component, ElementRef, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, AfterViewInit, ViewChild, OnDestroy } from '@angular/core';
 import {PixiBoid} from '../pixi-boid';
 import {Boid} from '../boid';
 import {Application} from 'pixi.js'
@@ -16,6 +16,7 @@ const turn_rate_offset = two_pi * (turn_rate_factor / 2)
 })
 export class BoidSim {
   // only contains canvas element and manages boid service
+  private app: Application | null = null;
   @ViewChild('pixiCanvas',
     { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
   constructor(private pixi: PixiBoid) {}
@@ -23,12 +24,13 @@ export class BoidSim {
   // get pixi-boid service on load
   async ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
-    const app = await this.pixi.getApp(canvas);
-    if (!(app instanceof Application)) throw new Error("app is null");
+    this.app = await this.pixi.getApp(canvas);
+    if (!(this.app instanceof Application)) throw new Error("app is null");
+    const app = this.app; // create a local copy so typescript knows is not null...
 
     const texture = await this.pixi.boid_img;
     console.log(texture);
-    const buffer = Math.max(app.screen.width, app.screen.height) / 10;
+    const buffer = Math.max(this.app?.screen.width, this.app?.screen.height) / 10;
 
     // create boids
     // TODO adjust length / num_boids
@@ -61,7 +63,12 @@ export class BoidSim {
 
     this.pixi.addTicker(update_all);
   }
-  // TODO destory on close
+
+  ngOnDestroy(){
+    if (this.app){
+      this.pixi.destroyApp();
+    }
+  }
 }
 
 
