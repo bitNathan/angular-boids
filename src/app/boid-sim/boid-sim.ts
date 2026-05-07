@@ -41,7 +41,6 @@ export class BoidSim {
         texture,
         Math.random() + 1,
         Math.random() * two_pi,
-        ((Math.random() * two_pi) * turn_rate_factor) - turn_rate_offset,
         app.screen.height,
         app.screen.width
       )
@@ -58,6 +57,7 @@ export class BoidSim {
         app.screen.height + buffer,
         -buffer,
         app.screen.width + buffer,
+        boids
       ));
     };
 
