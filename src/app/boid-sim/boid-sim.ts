@@ -35,7 +35,7 @@ export class BoidSim {
     // create boids
     // TODO adjust length / num_boids
     // TODO streamline Boid constructor
-    const boids = Array.from({length: 50}, () => {
+    const boids = Array.from({length: 100}, () => {
       // TODO generate random vals efficiently
       const b = new Boid(
         texture,

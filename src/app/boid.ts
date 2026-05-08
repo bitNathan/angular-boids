@@ -1,7 +1,15 @@
 import {Sprite, Texture} from 'pixi.js'
 
-const max_speed = 4;
-const avoid_distance_threshold = 1000;
+// TODO set based on window size
+const min_speed = 2;
+const max_speed = 8;
+const avoid_distance_threshold = 40;
+const vision_threshold = 75; // TODO vision angle
+
+const avoid_scale = 1;
+const alignment_scale = 0.02;
+const cohesion_scale = 0.005;
+const noise_scale = 0.5;
 
 export class Boid {
   sprite: Sprite;
@@ -25,69 +33,92 @@ export class Boid {
     this.speed_y = speed * Math.sin(this.rotation);
 
     // set acc randomly
-    this.acceleration_x = Math.random();
-    if (Math.random() > 0.5) this.acceleration_x *= -1;
-    this.acceleration_y = Math.random();
-    if (Math.random() > 0.5) this.acceleration_y *= -1;
+    this.acceleration_x = Math.random() - 0.5;
+    this.acceleration_y = Math.random() - 0.5;
   }
 
   update(delta_t: number, min_height: number, max_height: number, min_width: number, max_width: number, boids: Array<Boid>){
-    const distance_from_right = max_width - this.sprite.x;
-    const distance_from_left = this.sprite.x - min_width;
-    const distance_from_top = max_height - this.sprite.y;
-    const distance_from_bottom = this.sprite.y - min_width;
+    this.sprite.x += this.speed_x * delta_t;
+    this.sprite.y += this.speed_y * delta_t;
 
-    // update accel based on wall distance
-    this.acceleration_y = (distance_from_top - distance_from_bottom) / Math.max(Math.min(distance_from_top, distance_from_bottom), 1);
-    this.acceleration_x = (distance_from_right - distance_from_left) / Math.max(Math.min(distance_from_left, distance_from_right), 1);
+    // reset acceleration with some noise
+    this.acceleration_x = (Math.random() - 0.5) * noise_scale;
+    this.acceleration_y = (Math.random() - 0.5) * noise_scale;
 
-    // TODO without On^2
-    // boid rules
-    let distance: number;
-    for (const boid of boids){
-      distance = Math.sqrt(Math.pow(this.sprite.x, 2) + Math.pow(boid.sprite.x, 2));
-      if (distance < avoid_distance_threshold){
-        // seperation
-        // this.acceleration_y -= (boid.sprite.y - this.sprite.y);
-        // this.acceleration_x -= (boid.sprite.x - this.sprite.x);
-      }
-      else {
-        // cohesion TODO display arrow
-        // or dot or smth
-        // this.acceleration_y += (boid.sprite.y - this.sprite.y) / 20;
-        // this.acceleration_x += (boid.sprite.x - this.sprite.x) / 20;
-        // TODO alignment
-      }
+    let sep_x = 0, sep_y = 0;
+    let coh_x = 0, coh_y = 0;
+    let ali_x = 0, ali_y = 0;
+
+    let sep_count = 0;
+    let coh_count = 0;
+
+    for (const boid of boids) {
+        if (boid === this) continue;
+
+        const dx = boid.sprite.x - this.sprite.x;
+        const dy = boid.sprite.y - this.sprite.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist < 0.0001) continue;
+
+        if (dist < avoid_distance_threshold) {
+            sep_x -= dx / dist;
+            sep_y -= dy / dist;
+            sep_count++;
+        }
+
+        else if (dist < vision_threshold) {
+            coh_x += dx;
+            coh_y += dy;
+
+            ali_x += boid.speed_x;
+            ali_y += boid.speed_y;
+
+            coh_count++;
+        }
     }
 
-    // update velocity
-    this.speed_x = Math.max(-max_speed, Math.min(max_speed, this.speed_x + this.acceleration_x));
-    this.speed_y = Math.max(-max_speed, Math.min(max_speed, this.speed_y + this.acceleration_y));
-    // this.speed_x += this.acceleration_x;
-    // this.speed_y += this.acceleration_y;
+    //   Apply separation
+    if (sep_count > 0) {
+        this.acceleration_x += (sep_x / sep_count) * avoid_scale;
+        this.acceleration_y += (sep_y / sep_count) * avoid_scale;
+    }
 
-    // rotation
+    //   Apply cohesion / alignment
+    if (coh_count > 0) {
+        // Cohesion: steer toward average neighbor direction
+        this.acceleration_x += (coh_x / coh_count) * cohesion_scale;
+        this.acceleration_y += (coh_y / coh_count) * cohesion_scale;
+
+        // Alignment
+        ali_x /= coh_count;
+        ali_y /= coh_count;
+
+        this.acceleration_x += (ali_x - this.speed_x) * alignment_scale;
+        this.acceleration_y += (ali_y - this.speed_y) * alignment_scale;
+    }
+
+    //   Update velocity
+    this.speed_x += this.acceleration_x * delta_t;
+    this.speed_y += this.acceleration_y * delta_t;
+
+    // bound speed
+    const speed = Math.sqrt(this.speed_x*this.speed_x + this.speed_y*this.speed_y);
+    if (speed > max_speed) {
+        this.speed_x = (this.speed_x / speed) * max_speed;
+        this.speed_y = (this.speed_y / speed) * max_speed;
+    } else if (speed < min_speed){
+        this.speed_x = (this.speed_x / speed) * min_speed;
+        this.speed_y = (this.speed_y / speed) * min_speed;
+    }
+
     this.rotation = Math.atan2(this.speed_y, this.speed_x);
     this.sprite.rotation = this.rotation;
 
-    // update pos
-    this.sprite.x += delta_t * this.speed_x;
-    this.sprite.y += delta_t * this.speed_y;
-
-    // buffer checks
-    if (this.sprite.y < min_height){
-      this.sprite.y = max_height;
-    }
-    else if (this.sprite.y > max_height){
-      this.sprite.y = min_height;
-    }
-
-    // x buff checks
-    if (this.sprite.x < min_width){
-      this.sprite.x = max_width;
-    }
-    else if (this.sprite.x > max_width){
-      this.sprite.x = min_width;
-    }
+    // wrap-around
+    if (this.sprite.x < min_width)  this.sprite.x = max_width;
+    if (this.sprite.x > max_width)  this.sprite.x = min_width;
+    if (this.sprite.y < min_height) this.sprite.y = max_height;
+    if (this.sprite.y > max_height) this.sprite.y = min_height;
   }
 }
