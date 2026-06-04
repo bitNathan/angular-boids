@@ -4,6 +4,15 @@
 }
 
 .toggle_button {
-  width: 10%;
-  height: 50px;
+  width: 75px;
+  height: 75px;
+  /* background-color: rgb(65, 133, 65); */
+  /* opacity: 0.8; */
+  border-radius: 8px;
+
+}
+
+img#logo {
+  width: 75px;
+  height: 75px;
 }

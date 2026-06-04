@@ -7,7 +7,7 @@ import {Application, Assets} from 'pixi.js'
 export class PixiBoid {
   // singleton
   private app: Application | null = null;
-  readonly boid_img = Assets.load('https://pixijs.com/assets/bunny.png');
+  readonly boid_img = Assets.load('boid-1.png');
 
   constructor(private ngZone: NgZone){}
 
