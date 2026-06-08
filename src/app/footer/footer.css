@@ -1,8 +1,13 @@
-p, a {
+p {
   font-size: 1em;
+  color: var(--theme-light-text);
 }
 
 .footer-div {
   display: flex;
   justify-content: space-between;
+}
+
+hr {
+  color: var(--theme-light-accent);
 }

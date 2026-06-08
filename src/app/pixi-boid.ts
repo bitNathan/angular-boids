@@ -11,7 +11,6 @@ export class PixiBoid {
 
   constructor(private ngZone: NgZone){}
 
-  // TODO handle args for bg color
   async getApp(canvas: HTMLCanvasElement){
     // return app if present
     if (this.app){
@@ -24,10 +23,14 @@ export class PixiBoid {
     await this.ngZone.runOutsideAngular(async () => {
       this.app = new Application();
 
+      // TODO reset bg color when header button is pressed
+      let bg_color = "#fff9ee"
+      if (document.body.classList.contains('dark-mode')) bg_color = "#92a7c5"
+
       await this.app.init({
         canvas,
         resizeTo: canvas.parentElement ?? window,
-        backgroundColor: "ffffff",
+        backgroundColor: bg_color,
       });
     });
 

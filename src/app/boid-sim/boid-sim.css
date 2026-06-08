@@ -1,8 +1,9 @@
 canvas#pixiCanvas {
   display: block;
+  background-color: var(--theme-light-bg);
 }
 
 div.pixi-canv-wrap {
   width: 100vw;
-  height: 80vh;
+  height: 70vh;
 }
